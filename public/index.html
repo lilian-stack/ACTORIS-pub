@@ -412,7 +412,7 @@
             gameData = updateGameName();
         }
 
-        function launchGame() {
+        async function launchGame() {
             const button = document.getElementById('launchButton');
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('errorMessage');
@@ -427,11 +427,30 @@
             const gameName = currentData.gameName;
             const gameId = currentData.gameId;
 
+            console.log('[Protocol] 🚀 Démarrage du processus de lancement');
+            console.log('[Protocol] 📋 Données:', { gameName, gameId });
+
+            // 🎯 NOUVEAU : Envoyer une confirmation HTTP vers le launcher
+            try {
+                const confirmUrl = `http://localhost:3001/confirm-download?game=${encodeURIComponent(gameName)}${gameId ? '&gameId=' + encodeURIComponent(gameId) : ''}`;
+                console.log('[Protocol] 📡 Envoi de la confirmation vers le launcher:', confirmUrl);
+                
+                const response = await fetch(confirmUrl, {
+                    method: 'GET',
+                    mode: 'no-cors', // Pas de CORS pour localhost
+                    cache: 'no-cache'
+                });
+                
+                console.log('[Protocol] ✅ Confirmation envoyée au launcher');
+            } catch (err) {
+                console.warn('[Protocol] ⚠️ Impossible d\'envoyer la confirmation HTTP (le launcher n\'écoute peut-être pas):', err);
+                // Continuer quand même avec le protocole
+            }
+
             // Construire l'URL du protocole personnalisé
             const protocolUrl = `actoris://launch?game=${encodeURIComponent(gameName)}${gameId ? '&gameId=' + encodeURIComponent(gameId) : ''}`;
             
-            console.log('[Protocol] 🚀 Tentative d\'ouverture:', protocolUrl);
-            console.log('[Protocol] 📋 Données:', { gameName, gameId });
+            console.log('[Protocol] 🔗 Tentative d\'ouverture du protocole:', protocolUrl);
             
             // Méthode améliorée : utiliser un iframe pour forcer l'ouverture
             let protocolOpened = false;
@@ -509,7 +528,8 @@
         }
 
         // Auto-lancer après 2 secondes si le paramètre auto=true est présent
-        if (urlParams.get('auto') === 'true') {
+        const urlParamsCheck = new URLSearchParams(window.location.search);
+        if (urlParamsCheck.get('auto') === 'true') {
             setTimeout(() => {
                 launchGame();
             }, 2000);
