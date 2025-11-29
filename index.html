@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quêtes terminées - Actoris Launcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 60px 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-icon::after {
+            content: '✓';
+            color: white;
+            font-size: 60px;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .game-info {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .game-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .game-status {
+            color: #28a745;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .launch-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .launch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .launch-button:active {
+            transform: translateY(0);
+        }
+
+        .launch-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            display: none;
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon"></div>
+        <h1>Quêtes terminées !</h1>
+        <p class="subtitle">Félicitations ! Vous avez complété toutes les quêtes. Vous pouvez maintenant lancer le téléchargement du jeu.</p>
+        
+        <div class="game-info">
+            <div class="game-name" id="gameName">Jeu sélectionné</div>
+            <div class="game-status">✓ Prêt à être débloqué</div>
+        </div>
+
+        <button class="launch-button" id="launchButton" onclick="launchGame()">
+            🚀 Lancer le téléchargement
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Ouverture du launcher...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            Erreur : Impossible d'ouvrir le launcher. Assurez-vous que Actoris Launcher est installé.
+        </div>
+    </div>
+
+    <script>
+        // Récupérer le nom du jeu depuis l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameName = urlParams.get('game') || 'Jeu sélectionné';
+        const gameId = urlParams.get('gameId') || '';
+
+        // Afficher le nom du jeu
+        document.getElementById('gameName').textContent = gameName;
+
+        function launchGame() {
+            const button = document.getElementById('launchButton');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Désactiver le bouton et afficher le chargement
+            button.disabled = true;
+            loading.classList.add('active');
+            errorMessage.classList.remove('active');
+
+            // Construire l'URL du protocole personnalisé
+            const protocolUrl = `actoris://launch?game=${encodeURIComponent(gameName)}${gameId ? '&gameId=' + encodeURIComponent(gameId) : ''}`;
+            
+            // Méthode 1 : Essayer le protocole personnalisé
+            try {
+                // Créer un lien invisible et le cliquer
+                const link = document.createElement('a');
+                link.href = protocolUrl;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.log('Méthode 1 échouée, essai méthode 2...');
+            }
+
+            // Méthode 2 : Essayer window.location après un court délai
+            setTimeout(() => {
+                try {
+                    window.location.href = protocolUrl;
+                } catch (e) {
+                    console.log('Méthode 2 échouée, essai méthode 3...');
+                }
+            }, 100);
+
+            // Méthode 3 : Si le protocole n'est pas enregistré, essayer de trouver l'exécutable
+            setTimeout(() => {
+                // Vérifier si on est toujours sur la page (le protocole n'a pas fonctionné)
+                if (document.hasFocus()) {
+                    console.log('Le protocole n\'a pas fonctionné, essai de méthode alternative...');
+                    
+                    // Essayer de trouver l'exécutable dans les emplacements courants
+                    // Note: process.env n'existe pas dans le navigateur, on utilise des chemins fixes
+                    const username = window.location.hostname || 'lilia';
+                    const possiblePaths = [
+                        'C:\\Users\\' + username + '\\AppData\\Local\\Programs\\actoris-launcher\\Actoris.exe',
+                        'C:\\Program Files\\Actoris\\Actoris.exe',
+                        'C:\\Program Files (x86)\\Actoris\\Actoris.exe'
+                    ];
+                    
+                    // Construire une commande pour lancer le launcher avec les paramètres
+                    const gameParam = encodeURIComponent(gameName);
+                    const gameIdParam = gameId ? encodeURIComponent(gameId) : '';
+                    
+                    // Afficher un message avec instructions
+                    errorMessage.innerHTML = `
+                        <strong>Le protocole actoris:// n'est pas enregistré.</strong><br>
+                        <p style="margin-top: 10px;">Pour résoudre ce problème, choisissez une méthode :</p>
+                        <ol style="text-align: left; margin-top: 10px; margin-left: 20px;">
+                            <li><strong>Méthode simple :</strong> Ouvrez Actoris Launcher au moins une fois (cela enregistrera automatiquement le protocole), puis fermez et rouvrez votre navigateur.</li>
+                            <li><strong>Méthode manuelle :</strong> Exécutez le script <code>register-protocol.bat</code> dans ce dossier en tant qu'administrateur.</li>
+                        </ol>
+                        <p style="margin-top: 15px; font-size: 12px; color: #666;">
+                            <strong>Alternative :</strong> Ouvrez manuellement le launcher et recherchez le jeu : <strong>${gameName}</strong>
+                        </p>
+                    `;
+                    errorMessage.classList.add('active');
+                    button.disabled = false;
+                    loading.classList.remove('active');
+                } else {
+                    // Le protocole a fonctionné, on a perdu le focus
+                    console.log('Le protocole a fonctionné, la page a perdu le focus');
+                    // Cacher le chargement après quelques secondes
+                    setTimeout(() => {
+                        loading.classList.remove('active');
+                    }, 2000);
+                }
+            }, 2000);
+        }
+
+        // Auto-lancer après 2 secondes si le paramètre auto=true est présent
+        if (urlParams.get('auto') === 'true') {
+            setTimeout(() => {
+                launchGame();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
+
