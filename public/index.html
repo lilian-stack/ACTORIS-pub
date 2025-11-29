@@ -360,26 +360,57 @@
     </div>
 
     <script>
-        // Récupérer le nom du jeu depuis l'URL
-        const urlParams = new URLSearchParams(window.location.search);
-        let gameName = urlParams.get('game') || 'Jeu sélectionné';
-        const gameId = urlParams.get('gameId') || '';
+        // Fonction pour mettre à jour le nom du jeu
+        function updateGameName() {
+            // Récupérer le nom du jeu depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let gameName = urlParams.get('game') || 'Jeu sélectionné';
+            const gameId = urlParams.get('gameId') || '';
 
-        // Décoder le nom du jeu (il peut être encodé)
-        try {
-            gameName = decodeURIComponent(gameName);
-        } catch (e) {
-            console.warn('Erreur lors du décodage du nom du jeu:', e);
+            // Décoder le nom du jeu (il peut être encodé plusieurs fois)
+            try {
+                // Décoder jusqu'à ce qu'il n'y ait plus d'encodage
+                let decoded = gameName;
+                let previous = '';
+                while (decoded !== previous) {
+                    previous = decoded;
+                    decoded = decodeURIComponent(decoded);
+                }
+                gameName = decoded;
+            } catch (e) {
+                console.warn('Erreur lors du décodage du nom du jeu:', e);
+            }
+
+            // Afficher le nom du jeu immédiatement
+            const gameNameElement = document.getElementById('gameName');
+            if (gameNameElement) {
+                gameNameElement.textContent = gameName;
+                console.log('[Page] ✅ Nom du jeu affiché:', gameName);
+            } else {
+                console.warn('[Page] ⚠️ Élément gameName non trouvé, réessai dans 100ms...');
+                setTimeout(updateGameName, 100);
+            }
+            
+            console.log('[Page] Nom du jeu (brut):', urlParams.get('game'));
+            console.log('[Page] Nom du jeu (décodé):', gameName);
+            console.log('[Page] ID du jeu:', gameId);
+            
+            // Retourner les valeurs pour utilisation dans launchGame
+            return { gameName, gameId };
         }
 
-        // Afficher le nom du jeu immédiatement
-        const gameNameElement = document.getElementById('gameName');
-        if (gameNameElement) {
-            gameNameElement.textContent = gameName;
-        }
+        // Mettre à jour immédiatement au chargement
+        let gameData = updateGameName();
         
-        console.log('[Page] Nom du jeu:', gameName);
-        console.log('[Page] ID du jeu:', gameId);
+        // Réessayer après le chargement complet de la page
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                gameData = updateGameName();
+            });
+        } else {
+            // Le DOM est déjà chargé
+            gameData = updateGameName();
+        }
 
         function launchGame() {
             const button = document.getElementById('launchButton');
@@ -391,10 +422,16 @@
             loading.classList.add('active');
             errorMessage.classList.remove('active');
 
+            // Récupérer les données du jeu (mettre à jour au cas où)
+            const currentData = updateGameName();
+            const gameName = currentData.gameName;
+            const gameId = currentData.gameId;
+
             // Construire l'URL du protocole personnalisé
             const protocolUrl = `actoris://launch?game=${encodeURIComponent(gameName)}${gameId ? '&gameId=' + encodeURIComponent(gameId) : ''}`;
             
-            console.log('[Protocol] Tentative d\'ouverture:', protocolUrl);
+            console.log('[Protocol] 🚀 Tentative d\'ouverture:', protocolUrl);
+            console.log('[Protocol] 📋 Données:', { gameName, gameId });
             
             // Méthode améliorée : utiliser un iframe pour forcer l'ouverture
             let protocolOpened = false;
