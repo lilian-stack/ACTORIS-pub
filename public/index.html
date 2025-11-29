@@ -362,11 +362,24 @@
     <script>
         // Récupérer le nom du jeu depuis l'URL
         const urlParams = new URLSearchParams(window.location.search);
-        const gameName = urlParams.get('game') || 'Jeu sélectionné';
+        let gameName = urlParams.get('game') || 'Jeu sélectionné';
         const gameId = urlParams.get('gameId') || '';
 
-        // Afficher le nom du jeu
-        document.getElementById('gameName').textContent = gameName;
+        // Décoder le nom du jeu (il peut être encodé)
+        try {
+            gameName = decodeURIComponent(gameName);
+        } catch (e) {
+            console.warn('Erreur lors du décodage du nom du jeu:', e);
+        }
+
+        // Afficher le nom du jeu immédiatement
+        const gameNameElement = document.getElementById('gameName');
+        if (gameNameElement) {
+            gameNameElement.textContent = gameName;
+        }
+        
+        console.log('[Page] Nom du jeu:', gameName);
+        console.log('[Page] ID du jeu:', gameId);
 
         function launchGame() {
             const button = document.getElementById('launchButton');
